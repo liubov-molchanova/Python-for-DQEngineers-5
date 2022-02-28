@@ -96,11 +96,46 @@ def csv_write():
         for t in frequency_list:
             csvfile.write(t + ': ' + str(frequency[t]) + '\n')
 
+    letters_frequency = {}
+    file = open('Final.txt', 'r')
+    data_upper = file.read().replace(' ', '')
+    data = data_upper.lower()
+    for i in data:
+        if i.isalpha():
+            count = letters_frequency.get(i, 0)
+            letters_frequency[i] = count + 1
+
+    frequency_list = letters_frequency.keys()
+
+    upper_frequency = {}
+    for l in data_upper:
+        if l.isupper():
+            count_upper = upper_frequency.get(l, 0)
+            upper_frequency[l] = count_upper + 1
+
+    up = []
+    upper_list = upper_frequency.keys()
+    for i in upper_list:
+        up.append(i.lower())
+
+    total_letters = len([i for i in data if i.isalpha()])
+
+    headerList = ['letter', 'total', 'upper', 'percentage']
+
     with open('percent.csv', 'w') as csvfile_2:
-        csvfile_2.write('Total letters amount is: ' + str(len([i for i in data if i.isalpha()])) + '\n')
-        csvfile_2.write('Total upper letters amount is: ' + str(len([i for i in data_upper if i.isupper()])) + '\n')
-        csvfile_2.write('The % of upper letters in the quantity of all symbols is: ' + str(round(
-            len([i for i in data_upper if i.isupper()]) * 100 / (len(data_upper) - data_upper.count(' ')))) + '\n')
+        dw = csv.DictWriter(csvfile_2, delimiter=' ', fieldnames=headerList)
+        dw.writeheader()
+
+        for s in frequency_list:
+            if s not in up:
+                csvfile_2.write(s + '   ' + str(letters_frequency[s]) + '   ' + 'none' + '   ' + str(
+                    round(letters_frequency[s] * 100 / total_letters, 2)) + '\n')
+            else:
+                for t in upper_list:
+                    if s == t.lower():
+                        csvfile_2.write(
+                            s + '   ' + str(letters_frequency[s]) + '   ' + str(upper_frequency[t]) + '      ' + str(
+                                round(letters_frequency[s] * 100 / total_letters, 2)) + '\n')
 
 def publication():
     source_type = First_choice()
@@ -127,3 +162,4 @@ def publication():
         publication()
 
 publication()
+csv_write()
