@@ -40,9 +40,8 @@ class First_choice:
             self.text = re.split('\\n\\n', self.source_file_open)
             return self.text
         elif self.document_name.endswith('.json'):
-            self.source_file_open = open(self.document_name)
-            self.text = json.load(self.source_file_open)
-            return self.text
+            self.text_json = json.load(open(self.document_name))
+            return self.text_json
 
     def final_document(self):
         self.publications_number = int(input('Please, define how many publications you want to use: \n'))
@@ -61,30 +60,26 @@ class First_choice:
                     print('Wrong symbol! Not a digit!')
             elif self.document_name.endswith('.json'):
                 try:
-                    if self.publications_number < len(self.text):
-                        if self.publications_number > 0:
-                            for i in self.text:
-                                if self.text.index(i) < self.publications_number:
-                                    for ind, dict_ in enumerate(self.text):
-                                        if 'type' in dict_ and dict_['type'] == 'news':
-                                            f.write(f"""News -----------------\n{str(dict_["name"]).capitalize()}\n{str(dict_["text"]).capitalize()}\n{str(dict_["city"]).capitalize()}\n{datetime.now()}\n\n""")
-                                        elif 'type' in dict_ and dict_['type'] == 'ads':
-                                            f.write(f"""Ads ----------------- \n{str(dict_["name"]).capitalize()}\n{str(dict_['text']).capitalize()}\nExpiration date is: {str(date.today() + timedelta(days=30))}\n\n""")
-                                        elif 'type' in dict_ and dict_['type'] == 'Healthy breakfast':
-                                            f.write(f"""Healthy breakfast ---------------- \n{str(dict_["name"]).capitalize()}\n{str(dict_['ingredients']).capitalize()}\n{str(dict_['text']).capitalize()}\n{datetime.now()}\n\n""")
-                    elif self.publications_number >= len(self.text):
-                        for i in self.text:
-                            for ind, dict_ in enumerate(self.text):
-                                if 'type' in dict_ and dict_['type'] == 'news':
-                                    f.write(f"News -----------------\n{str(dict_['name']).capitalize()}\n{str(dict_['text']).capitalize()}\n{str(dict_['city']).capitalize()}\n{datetime.now()}\n\n")
-                                elif 'type' in dict_ and dict_['type'] == 'ads':
-                                    f.write(f"Ads ----------------- \n{str(dict_['name']).capitalize()}\n{str(dict_['text']).capitalize()}\nExpiration date is: {str(date.today() + timedelta(days=30))}\n\n")
-                                elif 'type' in dict_ and dict_['type'] == 'Healthy breakfast':
-                                    f.write(f"Healthy breakfast ---------------- \n{str(dict_['name']).capitalize()}\n{str(dict_['ingredients']).capitalize()}\n{str(dict_['text']).capitalize()}\n{datetime.now()}\n\n")
-
-                        #os.remove(self.document_name)
-                except ValueError:
-                    print('Wrong symbol! Not a digit!')
+                    for ind, dict_ in enumerate(self.text_json):
+                        if ind < self.publications_number:
+                            for key, val in dict_.items():
+                                if key == 'type' and val == 'news':
+                                    f.write(f"""News -----------------\n{str(dict_["name"]).capitalize()}\n{str(dict_["text"]).capitalize()}\n{str(dict_["city"]).capitalize()}\n{datetime.now()}\n\n""")
+                                elif key == 'type' and val == 'ads':
+                                    f.write(f"""Ads ----------------- \n{str(dict_["name"]).capitalize()}\n{str(dict_['text']).capitalize()}\nExpiration date is: {str(date.today() + timedelta(days=30))}\n\n""")
+                                elif key == 'type' and val == 'Healthy breakfast':
+                                    f.write(f"""Healthy breakfast ---------------- \n{str(dict_["name"]).capitalize()}\n{str(dict_['ingredients']).capitalize()}\n{str(dict_['text']).capitalize()}\n{datetime.now()}\n\n""")
+                        elif self.publications_number >= ind:
+                                for ind, dict_ in enumerate(self.text_json):
+                                    if ind == 'type' and val =='news':
+                                        f.write(f"News -----------------\n{str(dict_['name']).capitalize()}\n{str(dict_['text']).capitalize()}\n{str(dict_['city']).capitalize()}\n{datetime.now()}\n\n")
+                                    elif ind == 'type' and val == 'ads':
+                                        f.write(f"Ads ----------------- \n{str(dict_['name']).capitalize()}\n{str(dict_['text']).capitalize()}\nExpiration date is: {str(date.today() + timedelta(days=30))}\n\n")
+                                    elif ind == 'type' and val == 'Healthy breakfast':
+                                        f.write(f"Healthy breakfast ---------------- \n{str(dict_['name']).capitalize()}\n{str(dict_['ingredients']).capitalize()}\n{str(dict_['text']).capitalize()}\n{datetime.now()}\n\n")
+                        os.remove(self.document_name)
+                except (ValueError, FileNotFoundError):
+                    pass
 
 class Publication:
     def __init__(self): # here we are using our normalization from the HW#4
@@ -200,7 +195,7 @@ def publication():
            #     source_type.final_document_json()
             else:
                 'Wrong document type!'
-        elif self.which_document == '2':
+        elif source_type.which_document == '2':
             source_type.source_document()
             source_type.final_document()
     else:
