@@ -1,0 +1,21 @@
+<news_feed>
+    <info type="news">
+        <name>It's weekend</name>
+        <text>It is a long weekend now as the 7's of March was moved to the next Saturday</text>
+        <city>minsk</city>
+    </info>
+    <info type="ads">
+        <name>I'm selling my table</name>
+        <text>my table is very useful and very cheep - 10$</text>
+    </info>
+    <info type="healthy_breakfast">
+        <name>salad</name>
+        <text>please take a tomato, a salad leaf and a salsa souse </text>
+        <ingredients>salad tomato salsa</ingredients>
+    </info>
+    <info type="news">
+        <name>flowers</name>
+        <text>the first flowers were found in the forest today</text>
+        <city>radoshkovichy</city>
+    </info>
+</news_feed>
