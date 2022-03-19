@@ -3,8 +3,12 @@ import re
 import os, sys
 import string
 import csv
+import xml.etree.ElementTree as Tree
+
 from datetime import date, datetime, timedelta
 from Functions import normal_text
+from xml.dom import minidom
+from xml.dom.minidom import parseString
 
 class First_choice:
     def __init__(self): # we are getting the information about the source of a future publication: a file or manual input
@@ -13,8 +17,9 @@ class First_choice:
             self.publication_type = input('''Please, choose a Publication type:\n1 - for a news\n2 - for an ads\n3 - for a healthy breakfast: \n''')
         elif self.choice == '2':
             self.which_document = input('If you want to use your document, please, enter 1. \nIf you want to use a default file, please, enter 2. \n')
+            self.publications_number = int(input('Please, define how many publications you want to use: \n'))
             if self.which_document == '1':
-                self.document_name = input("Please, enter your document name (including '.txt' or '.json'- \n(example: document.txt or document.json)): \n")
+                self.document_name = input("Please, enter your document name (including '.txt', '.json' or '.xml' - \n(example: document.txt or document.json or document.xml)): \n")
                 try:
                     file = open(self.document_name)
                     if self.document_name.endswith('.json'):
@@ -36,15 +41,17 @@ class First_choice:
 
     def source_document(self):
         if self.document_name.endswith('.txt'):
-            self.source_file_open = open(self.document_name, 'r').read()
-            self.text = re.split('\\n\\n', self.source_file_open)
+            source_file_open = open(self.document_name, 'r').read()
+            self.text = re.split('\\n\\n', source_file_open)
             return self.text
         elif self.document_name.endswith('.json'):
             self.text_json = json.load(open(self.document_name))
             return self.text_json
+        elif self.document_name.endswith('.xml'):
+            self.text_xml = Tree.parse(self.document_name).getroot()
+            return self.text_xml
 
     def final_document(self):
-        self.publications_number = int(input('Please, define how many publications you want to use: \n'))
         with open('Final.txt', 'a') as f:
             if self.document_name.endswith('.txt'):
                 try:
@@ -73,6 +80,48 @@ class First_choice:
                     pass
                 if self.publications_number >= len(self.text_json):
                     os.remove(self.document_name)
+
+    def final_document_xml(self):
+        try:
+            with open(self.document_name, 'r') as file:
+                data = file.read()
+                dom = parseString(data)
+                with open('Final.txt', 'a') as f:
+                    count = 1
+                    if len(dom.getElementsByTagName('info')) > self.publications_number:
+                        for child in self.text_xml:
+                            text = getattr(child.find('text'), 'text', '\n')
+                            name = getattr(child.find('name'), 'text', '\n')
+                            city = getattr(child.find('city'), 'text', '\n')
+                            ingredients = getattr(child.find('ingredients'), 'text', '\n')
+                            if child.attrib['type'] == "news":
+                                f.write(f"""News -----------------\n{name.capitalize()}\n{text.capitalize()}\n{city.capitalize()}\n{datetime.now()}\n\n""")
+                            elif child.attrib['type'] == "ads":
+                                f.write(f"""Ads ----------------- \n{name.capitalize()}\n{text.capitalize()}\nExpiration date is: {str(date.today() + timedelta(days=30))}\n\n""")
+                            elif child.attrib['type'] == "healthy_breakfast":
+                                f.write(f"Healthy breakfast ---------------- \n{name.capitalize()}\n{ingredients.capitalize()}\n{text.capitalize()}\n{datetime.now()}\n\n")
+                            count = count + 1
+                            if count > self.publications_number:
+                                break
+                    elif len(dom.getElementsByTagName('info')) <= self.publications_number:
+                        for child in self.text_xml:
+                            text = getattr(child.find('text'), 'text', '\n')
+                            name = getattr(child.find('name'), 'text', '\n')
+                            city = getattr(child.find('city'), 'text', '\n')
+                            ingredients = getattr(child.find('ingredients'), 'text', '\n')
+                            if child.attrib['type'] == "news":
+                                f.write(f"""News -----------------\n{name.capitalize()}\n{text.capitalize()}\n{city.capitalize()}\n{datetime.now()}\n\n""")
+                            elif child.attrib['type'] == "ads":
+                                f.write(f"""Ads ----------------- \n{name.capitalize()}\n{text.capitalize()}\nExpiration date is: {str(date.today() + timedelta(days=30))}\n\n""")
+                            elif child.attrib['type'] == "healthy_breakfast":
+                                f.write(f"Healthy breakfast ---------------- \n{name.capitalize()}\n{ingredients.capitalize()}\n{text.capitalize()}\n{datetime.now()}\n\n")
+                            count = count + 1
+                            if count > self.publications_number:
+                                break
+                        os.remove(self.document_name)
+        except PermissionError:
+            os.remove(self.document_name)
+            pass
 
 class Publication:
     def __init__(self): # here we are using our normalization from the HW#4
@@ -106,7 +155,6 @@ class Healthy_breakfast(Publication):
         self.ingredients = f"""Healthy ingredients: {input("Please, enter all necessary ingredients (only healthy ones!): ").capitalize()}"""
         cooking_recommendations = f"Cooking recommendations: {self.text}\n"
         self.line = f"""Healthy breakfast -----------------\n{self.name}\n{self.ingredients}\n{cooking_recommendations}{self.date}\n\n"""
-
 def csv_write():
     with open('Final.txt', 'r') as file:
         data_upper = file.read()
@@ -186,6 +234,9 @@ def publication():
                 source_type.source_document()
                 source_type.final_document()
            #     source_type.final_document_json()
+            elif source_type.document_name.endswith('xml'):
+                source_type.source_document()
+                source_type.final_document_xml()
             else:
                 'Wrong document type!'
         elif source_type.which_document == '2':
