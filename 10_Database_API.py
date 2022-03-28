@@ -65,41 +65,31 @@ class First_choice:
                                     name TEXT NOT NULL, text TEXT NOT NULL, date TEXT DEFAULT CURRENT_DATE NOT NULL, PRIMARY KEY(text, date));''')
                 self.cursor.execute('''CREATE TABLE IF NOT EXISTS break (
                                     name TEXT NOT NULL, ingredients TEXT NOT NULL, text TEXT, date TEXT DEFAULT CURRENT_DATE NOT NULL, PRIMARY KEY(name));''')
-                self.cursor.execute('''CREATE TABLE IF NOT EXISTS total ( 
-                                    tot INTEGER);''') # we are creating a table that will store a total number of records inserted to the Data Base
-                self.cursor.execute("INSERT INTO total VALUES (?)", (0)) # not to iterate over the whole text file, we will start from the next index each time
+                raw_count = self.cursor.execute("SELECT (SELECT COUNT(name) FROM news) + (SELECT COUNT(name) FROM ads) + (SELECT COUNT(name) FROM break)")
+                count = self.cursor.fetchone()[0]
                 with open('Final.txt', 'r') as file:
                     source_file_open = file.read()
                     text = re.split('\\n\\n', source_file_open)
-
                     for ind, i in enumerate(text):
-                        self.cursor.execute("SELECT * FROM total")
-                        records = self.cursor.fetchall()
-                        for index, raw in enumerate(records):
-                            if index == 0:
-                                control = raw[0] # we are creating counter of records
-                        info_piece = re.split('\n', i)
-                        if ind >= control:
+                        if ind >= count: # not to iterate over the whole text file, we will use only those records which index is bigger than the total number of records in DB
+                            info_piece = re.split('\n', i)
                             for index, t in enumerate(info_piece):
                                 if index == 0 and t.startswith('News'):
                                     try:
                                         self.cursor.execute("INSERT INTO 'news' VALUES (?, ?, ?, ?)",
                                                            (info_piece[1], info_piece[2], info_piece[3], info_piece[4]))
-                                        self.cursor.execute("UPDATE total SET tot = tot + 1")
                                     except pyodbc.Error:
-                                        pass
+                                            pass
                                 elif index == 0 and t.startswith('Ads'):
                                     try:
                                         self.cursor.execute("INSERT INTO 'ads' VALUES (?, ?, ?)",
                                                            (info_piece[1], info_piece[2], info_piece[3]))
-                                        self.cursor.execute("UPDATE total SET tot = tot + 1")
                                     except pyodbc.Error:
                                         pass
                                 elif index == 0 and t.startswith('Healthy'):
                                     try:
                                         self.cursor.execute("INSERT INTO 'break' VALUES (?, ?, ?, ?)",
                                                            (info_piece[1], info_piece[2], info_piece[3], info_piece[4]))
-                                        self.cursor.execute("UPDATE total SET tot = tot + 1")
                                     except pyodbc.Error:
                                         pass
 
@@ -332,5 +322,7 @@ csv_write()
 # records1 = cursor.fetchall()
 # cursor.execute(select_from_break)
 # records2 = cursor.fetchall()
+# cursor.execute("SELECT (SELECT COUNT(name) FROM news) + (SELECT COUNT(name) FROM ads) + (SELECT COUNT(name) FROM break)")
+# count = cursor.fetchone()[0]
 #
-# print(' Ads: ', records, '\n', 'News: ', records1, '\n', 'Breakfast: ', records2)
+# print('Ads: ', records, '\nNews: ', records1, '\nBreakfast: ', records2, '\ntotal raws number is: ', count)
